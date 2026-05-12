@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Sheet,
   SheetContent,
@@ -26,6 +26,31 @@ export function NewPropertySheet({ open, onOpenChange, onAdd }: NewPropertySheet
   const [deposit, setDeposit] = useState('')
   const [rent, setRent] = useState('')
   const [maintenance, setMaintenance] = useState('')
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
+
+  useEffect(() => {
+    if (!open) {
+      setKeyboardHeight(0)
+      return
+    }
+
+    const viewport = window.visualViewport
+    if (!viewport) return
+
+    const handler = () => {
+      const height = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+      setKeyboardHeight(height)
+    }
+
+    viewport.addEventListener('resize', handler)
+    viewport.addEventListener('scroll', handler)
+
+    return () => {
+      viewport.removeEventListener('resize', handler)
+      viewport.removeEventListener('scroll', handler)
+      setKeyboardHeight(0)
+    }
+  }, [open])
 
   const handleSubmit = () => {
     if (!nickname.trim()) {
@@ -51,12 +76,16 @@ export function NewPropertySheet({ open, onOpenChange, onAdd }: NewPropertySheet
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl mx-auto max-w-lg">
+      <SheetContent
+        side="bottom"
+        className="rounded-t-2xl mx-auto max-w-lg"
+        style={{ bottom: keyboardHeight, transition: 'bottom 0.2s ease-out' }}
+      >
         <SheetHeader>
           <SheetTitle>새 매물 추가</SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-col gap-4 py-4 px-4">
+        <div className="flex flex-col gap-4 py-4 px-4 overflow-y-auto max-h-[60dvh]">
           <div>
             <Label htmlFor="nickname" className="mb-2 block text-sm font-medium">
               매물 이름
@@ -67,7 +96,6 @@ export function NewPropertySheet({ open, onOpenChange, onAdd }: NewPropertySheet
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               className="min-h-[44px]"
-              autoFocus
             />
           </div>
 
