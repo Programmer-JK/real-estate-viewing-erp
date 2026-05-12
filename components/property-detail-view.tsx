@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { toast } from '@/hooks/use-toast'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Phase1Section } from '@/components/detail-sections/phase1-section'
 import { Phase2Section } from '@/components/detail-sections/phase2-section'
 import { Phase3Section } from '@/components/detail-sections/phase3-section'
@@ -99,18 +100,25 @@ export function PropertyDetailView({
       </header>
 
       {/* Content */}
-      <div className="mx-auto flex max-w-lg flex-col gap-6 p-4">
-        {/* Header Summary Card */}
+      <div className="mx-auto flex max-w-lg flex-col gap-4 p-4">
         <HeaderSummary property={property} score={score} />
 
-        {/* Phase 1: Pre-Visit */}
-        <Phase1Section property={property} onUpdate={updateProperty} />
-
-        {/* Phase 2: On-Site */}
-        <Phase2Section property={property} onUpdate={updateProperty} />
-
-        {/* Phase 3: Post-Visit Analysis */}
-        <Phase3Section property={property} score={score} />
+        <Tabs defaultValue="phase1">
+          <TabsList className="w-full">
+            <TabsTrigger value="phase1" className="flex-1">방문 전</TabsTrigger>
+            <TabsTrigger value="phase2" className="flex-1">현장</TabsTrigger>
+            <TabsTrigger value="phase3" className="flex-1">분석</TabsTrigger>
+          </TabsList>
+          <TabsContent value="phase1">
+            <Phase1Section property={property} onUpdate={updateProperty} />
+          </TabsContent>
+          <TabsContent value="phase2">
+            <Phase2Section property={property} onUpdate={updateProperty} />
+          </TabsContent>
+          <TabsContent value="phase3">
+            <Phase3Section property={property} score={score} />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Delete Confirmation Dialog */}

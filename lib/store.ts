@@ -38,7 +38,10 @@ export function createDefaultProperty(): Property {
     contractConditions: {
       shortTerm: false,
       petsAllowed: false,
-      residencyRegistration: false
+      residencyRegistration: false,
+      parking: false,
+      depositInsurance: false,
+      earlyTermination: false
     },
     appliances: APPLIANCE_KEYS.reduce((acc, key) => {
       acc[key] = 'none'
@@ -85,7 +88,10 @@ const SAMPLE_PROPERTIES: Property[] = [
     contractConditions: {
       shortTerm: false,
       petsAllowed: false,
-      residencyRegistration: true
+      residencyRegistration: true,
+      parking: false,
+      depositInsurance: true,
+      earlyTermination: false
     },
     appliances: {
       에어컨: 'ok',
@@ -137,7 +143,10 @@ const SAMPLE_PROPERTIES: Property[] = [
     contractConditions: {
       shortTerm: true,
       petsAllowed: true,
-      residencyRegistration: false
+      residencyRegistration: false,
+      parking: true,
+      depositInsurance: false,
+      earlyTermination: true
     },
     appliances: {
       에어컨: 'ok',
@@ -221,9 +230,12 @@ export function usePropertyStore() {
   }, [])
 
   const updateProperty = useCallback(async (id: string, updates: Partial<Property>) => {
-    // Optimistic update
-    setProperties(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p))
-    const updated = await getFullProperty(id, updates)
+    let updated: Property | null = null
+    setProperties(prev => {
+      const current = prev.find(p => p.id === id)
+      updated = current ? { ...current, ...updates } : null
+      return prev.map(p => p.id === id ? { ...p, ...updates } : p)
+    })
     if (!updated) return
     await supabase
       .from('properties')
@@ -267,15 +279,4 @@ export function usePropertyStore() {
     toggleCompare,
     resetData
   }
-}
-
-// Helper: merge updates into current property for upsert
-async function getFullProperty(id: string, updates: Partial<Property>): Promise<Property | null> {
-  const { data } = await supabase
-    .from('properties')
-    .select('data')
-    .eq('id', id)
-    .single()
-  if (!data) return null
-  return { ...(data.data as Property), ...updates }
 }

@@ -36,6 +36,51 @@ export function Phase1Section({ property, onUpdate }: Phase1SectionProps) {
         <h2 className="text-lg font-semibold">Phase 1 - 방문 전</h2>
       </div>
 
+
+      {/* Schedule Card */}
+      <Card className='mb-10'>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">방문 스케줄러</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div>
+            <Label htmlFor="datetime" className="text-sm text-muted-foreground">방문 일시</Label>
+            <Input
+              id="datetime"
+              type="datetime-local"
+              value={property.schedule.datetime}
+              onChange={(e) => updateSchedule({ datetime: e.target.value })}
+              className="mt-1 min-h-[44px]"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">방문 대기</span>
+              <Switch
+                checked={property.schedule.status === 'visited'}
+                onCheckedChange={(checked) =>
+                  updateSchedule({ status: checked ? 'visited' : 'pending' })
+                }
+              />
+              <span className="text-sm text-muted-foreground">방문 완료</span>
+            </div>
+          </div>
+
+          <Badge
+            variant="outline"
+            className={cn(
+              'w-fit',
+              property.schedule.status === 'visited'
+                ? 'border-green-500 bg-green-50 text-green-600'
+                : 'border-blue-500 bg-blue-50 text-blue-600'
+            )}
+          >
+            {property.schedule.status === 'visited' ? '방문 완료' : '방문 대기'}
+          </Badge>
+        </CardContent>
+      </Card>
+
       {/* Agent Profile Card */}
       <Card className="mb-4">
         <CardHeader className="pb-2">
@@ -107,50 +152,6 @@ export function Phase1Section({ property, onUpdate }: Phase1SectionProps) {
               className="mt-1 min-h-[44px]"
             />
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Schedule Card */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">방문 스케줄러</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div>
-            <Label htmlFor="datetime" className="text-sm text-muted-foreground">방문 일시</Label>
-            <Input
-              id="datetime"
-              type="datetime-local"
-              value={property.schedule.datetime}
-              onChange={(e) => updateSchedule({ datetime: e.target.value })}
-              className="mt-1 min-h-[44px]"
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">방문 대기</span>
-              <Switch
-                checked={property.schedule.status === 'visited'}
-                onCheckedChange={(checked) => 
-                  updateSchedule({ status: checked ? 'visited' : 'pending' })
-                }
-              />
-              <span className="text-sm text-muted-foreground">방문 완료</span>
-            </div>
-          </div>
-
-          <Badge
-            variant="outline"
-            className={cn(
-              'w-fit',
-              property.schedule.status === 'visited'
-                ? 'border-green-500 bg-green-50 text-green-600'
-                : 'border-blue-500 bg-blue-50 text-blue-600'
-            )}
-          >
-            {property.schedule.status === 'visited' ? '방문 완료' : '방문 대기'}
-          </Badge>
         </CardContent>
       </Card>
     </section>

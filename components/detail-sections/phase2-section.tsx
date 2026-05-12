@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Copy, Check, X, AlertTriangle, ImagePlus } from 'lucide-react'
+import { Copy, Check, X, AlertTriangle, ImagePlus, Compass } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Accordion,
@@ -19,7 +19,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
 import type { Property, Direction, ApplianceStatus, WaterPressure, NoiseLevel, LightingLevel, SmellLevel } from '@/lib/types'
-import { DIRECTION_OPTIONS, APPLIANCE_KEYS, WATER_PRESSURE_LABELS, NOISE_LABELS, LIGHTING_LABELS, SMELL_LABELS } from '@/lib/types'
+import { APPLIANCE_KEYS, WATER_PRESSURE_LABELS, NOISE_LABELS, LIGHTING_LABELS, SMELL_LABELS } from '@/lib/types'
 import { getDirectionWarning, getBuildingAgeWarning, getApplianceCount, getEffectiveMonthly, getAnnualCost, getAnnualWithDeposit } from '@/lib/scoring'
 import { cn } from '@/lib/utils'
 
@@ -103,10 +103,10 @@ export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
 
   const cycleApplianceStatus = (key: keyof Property['appliances']) => {
     const currentStatus = property.appliances[key]
-    const nextStatus: ApplianceStatus = 
-      currentStatus === 'ok' ? 'none' : 
-      currentStatus === 'none' ? 'broken' : 'ok'
-    
+    const nextStatus: ApplianceStatus =
+      currentStatus === 'ok' ? 'none' :
+        currentStatus === 'none' ? 'broken' : 'ok'
+
     onUpdate({
       appliances: { ...property.appliances, [key]: nextStatus }
     })
@@ -159,21 +159,30 @@ export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
             {/* Direction */}
             <div>
               <Label className="text-sm text-muted-foreground">방향 (향)</Label>
-              <div className="mt-2 grid grid-cols-4 gap-2">
-                {DIRECTION_OPTIONS.map((dir) => (
-                  <button
-                    key={dir}
-                    onClick={() => onUpdate({ direction: property.direction === dir ? '' : dir })}
-                    className={cn(
-                      'min-h-[44px] rounded-lg border text-sm font-medium transition-colors',
-                      property.direction === dir
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-card text-foreground hover:bg-accent'
-                    )}
-                  >
-                    {dir}
-                  </button>
-                ))}
+              <div className="mt-2 grid grid-cols-3 gap-1.5">
+                {(['북서', '북', '북동', '서', null, '동', '남서', '남', '남동'] as const).map((dir, i) => {
+                  if (!dir) {
+                    return (
+                      <div key={i} className="flex items-center justify-center">
+                        <Compass className="h-6 w-6 text-muted-foreground/40" />
+                      </div>
+                    )
+                  }
+                  return (
+                    <button
+                      key={dir}
+                      onClick={() => onUpdate({ direction: property.direction === dir ? '' : dir })}
+                      className={cn(
+                        'min-h-[44px] rounded-lg border text-sm font-medium transition-colors',
+                        property.direction === dir
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-card text-foreground hover:bg-accent'
+                      )}
+                    >
+                      {dir}향
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
@@ -244,50 +253,65 @@ export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-sm text-muted-foreground">층수</Label>
-                <div className="mt-1 flex items-center gap-1">
-                  <Input
-                    type="number"
-                    value={property.floor || ''}
-                    onChange={(e) => onUpdate({ floor: parseInt(e.target.value) || 0 })}
-                    className="min-h-[44px] w-16"
-                    placeholder="3"
-                  />
-                  <span className="text-sm text-muted-foreground">층 / 총</span>
-                  <Input
-                    type="number"
-                    value={property.totalFloors || ''}
-                    onChange={(e) => onUpdate({ totalFloors: parseInt(e.target.value) || 0 })}
-                    className="min-h-[44px] w-16"
-                    placeholder="5"
-                  />
-                  <span className="text-sm text-muted-foreground">층</span>
+                <div className="mt-1 grid grid-cols-2 gap-1">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-muted-foreground">내 방</span>
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        value={property.floor || ''}
+                        onChange={(e) => onUpdate({ floor: parseInt(e.target.value) || 0 })}
+                        className="min-h-[44px]"
+                        placeholder="3"
+                      />
+                      <span className="shrink-0 text-sm text-muted-foreground">층</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-muted-foreground">전체</span>
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        value={property.totalFloors || ''}
+                        onChange={(e) => onUpdate({ totalFloors: parseInt(e.target.value) || 0 })}
+                        className="min-h-[44px]"
+                        placeholder="5"
+                      />
+                      <span className="shrink-0 text-sm text-muted-foreground">층</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div>
                 <Label className="text-sm text-muted-foreground">엘리베이터</Label>
-                <div className="mt-1 flex gap-2">
-                  <button
-                    onClick={() => onUpdate({ hasElevator: true })}
-                    className={cn(
-                      'min-h-[44px] flex-1 rounded-lg border text-sm font-medium transition-colors',
-                      property.hasElevator
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-card text-foreground hover:bg-accent'
-                    )}
-                  >
-                    있음
-                  </button>
-                  <button
-                    onClick={() => onUpdate({ hasElevator: false })}
-                    className={cn(
-                      'min-h-[44px] flex-1 rounded-lg border text-sm font-medium transition-colors',
-                      !property.hasElevator
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-card text-foreground hover:bg-accent'
-                    )}
-                  >
-                    없음
-                  </button>
+                <div className="mt-1 flex flex-col gap-1">
+                  <span className="text-xs opacity-0">-</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => onUpdate({ hasElevator: true })}
+                      className={cn(
+                        'min-h-[44px] flex-1 rounded-lg border text-sm font-medium transition-colors',
+                        property.hasElevator
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-card text-foreground hover:bg-accent'
+                      )}
+                    >
+                      있음
+                    </button>
+                    <button
+                      onClick={() => onUpdate({ hasElevator: false })}
+                      className={cn(
+                        'min-h-[44px] flex-1 rounded-lg border text-sm font-medium transition-colors',
+                        !property.hasElevator
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-card text-foreground hover:bg-accent'
+                      )}
+                    >
+                      없음
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -326,39 +350,35 @@ export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
         {/* Contract Conditions */}
         <AccordionItem value="contract" className="rounded-lg border bg-card px-4">
           <AccordionTrigger className="text-base font-medium">계약 조건</AccordionTrigger>
-          <AccordionContent className="flex flex-col gap-3 pb-4">
-            <div className="flex items-center gap-3">
-              <Checkbox
-                id="shortTerm"
-                checked={property.contractConditions.shortTerm}
-                onCheckedChange={(checked) => onUpdate({
-                  contractConditions: { ...property.contractConditions, shortTerm: !!checked }
-                })}
-                className="h-6 w-6"
-              />
-              <Label htmlFor="shortTerm">단기계약 가능 (6개월 이하)</Label>
-            </div>
-            <div className="flex items-center gap-3">
-              <Checkbox
-                id="petsAllowed"
-                checked={property.contractConditions.petsAllowed}
-                onCheckedChange={(checked) => onUpdate({
-                  contractConditions: { ...property.contractConditions, petsAllowed: !!checked }
-                })}
-                className="h-6 w-6"
-              />
-              <Label htmlFor="petsAllowed">반려동물 허용</Label>
-            </div>
-            <div className="flex items-center gap-3">
-              <Checkbox
-                id="residencyRegistration"
-                checked={property.contractConditions.residencyRegistration}
-                onCheckedChange={(checked) => onUpdate({
-                  contractConditions: { ...property.contractConditions, residencyRegistration: !!checked }
-                })}
-                className="h-6 w-6"
-              />
-              <Label htmlFor="residencyRegistration">전입신고 가능</Label>
+          <AccordionContent className="pb-4">
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { key: 'shortTerm', label: '단기계약', sub: '6개월 이하' },
+                { key: 'petsAllowed', label: '반려동물', sub: '허용' },
+                { key: 'residencyRegistration', label: '전입신고', sub: '가능' },
+                { key: 'parking', label: '주차', sub: '가능' },
+                { key: 'depositInsurance', label: '보증보험', sub: '가입 가능' },
+                { key: 'earlyTermination', label: '중도해지', sub: '가능' },
+              ] as const).map(({ key, label, sub }) => {
+                const checked = property.contractConditions[key]
+                return (
+                  <button
+                    key={key}
+                    onClick={() => onUpdate({
+                      contractConditions: { ...property.contractConditions, [key]: !checked }
+                    })}
+                    className={cn(
+                      'flex min-h-[56px] flex-col items-center justify-center rounded-lg border text-sm font-medium transition-colors',
+                      checked
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-card text-foreground hover:bg-accent'
+                    )}
+                  >
+                    <span>{label}</span>
+                    <span className={cn('text-xs', checked ? 'text-primary-foreground/70' : 'text-muted-foreground')}>{sub}</span>
+                  </button>
+                )
+              })}
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -366,7 +386,7 @@ export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
         {/* Appliances Checklist */}
         <AccordionItem value="appliances" className="rounded-lg border bg-card px-4">
           <AccordionTrigger className="text-base font-medium">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2">
               <span>가구 / 가전 체크리스트</span>
               <span className="text-sm font-normal text-muted-foreground">
                 구비 {ok}개 / 상태불량 {broken}개 / 없음 {none}개
@@ -506,12 +526,11 @@ export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              capture="environment"
               multiple
               onChange={handlePhotoUpload}
               className="hidden"
             />
-            
+
             <Button
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
@@ -549,13 +568,13 @@ export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
         </AccordionItem>
 
         {/* Memo */}
-        <Card className="p-4">
+        <Card className="p-4 gap-2">
           <Label className="text-base font-medium">현장 메모</Label>
           <Textarea
             value={property.memo}
             onChange={(e) => onUpdate({ memo: e.target.value })}
             placeholder="채광은 좋으나 창문 바로 앞 건물이 가림 / 복도 담배 냄새 있음 / 관리비 실제로 10만원 이상 나온다고 함"
-            className="mt-2 min-h-[150px]"
+            className="min-h-[150px]"
           />
         </Card>
       </Accordion>

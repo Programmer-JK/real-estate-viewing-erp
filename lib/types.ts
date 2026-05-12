@@ -28,6 +28,9 @@ export interface ContractConditions {
   shortTerm: boolean
   petsAllowed: boolean
   residencyRegistration: boolean
+  parking: boolean
+  depositInsurance: boolean
+  earlyTermination: boolean
 }
 
 export interface Appliances {
