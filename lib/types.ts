@@ -7,6 +7,13 @@ export type NoiseLevel = 'quiet' | 'normal' | 'loud'
 export type LightingLevel = 'dark' | 'normal' | 'bright'
 export type SmellLevel = 'bad' | 'neutral' | 'good'
 
+export type MoldLevel = 'none' | 'minor' | 'severe'
+export type ConditionLevel = 'good' | 'normal' | 'bad'
+export type HeatingType = 'individual' | 'central' | 'district'
+export type HeatingMethod = 'floor' | 'radiator' | 'electric'
+export type DoorLockType = 'keypad' | 'key' | 'card' | 'fingerprint'
+export type WindowType = 'double' | 'single'
+
 export type ScheduleStatus = 'pending' | 'visited'
 
 export type ScorePreset = 'balanced' | 'cost' | 'environment'
@@ -53,6 +60,21 @@ export interface Sensory {
   smell: SmellLevel
 }
 
+export interface Inspection {
+  mold: MoldLevel
+  floorCondition: ConditionLevel
+  heatingType: HeatingType
+  heatingMethod: HeatingMethod
+  hasCommercial: boolean
+  doorLockType: DoorLockType
+  bathroomCount: number
+  bathroomCondition: ConditionLevel
+  hasBathtub: boolean
+  windowCount: number
+  windowType: WindowType
+  windowCondition: ConditionLevel
+}
+
 export interface Property {
   id: string
   createdAt: string // ISO date string
@@ -79,6 +101,7 @@ export interface Property {
   contractConditions: ContractConditions
   appliances: Appliances
   sensory: Sensory
+  inspection: Inspection
 
   photos: string[] // base64 encoded image strings
   memo: string
@@ -113,4 +136,55 @@ export const SMELL_LABELS: Record<SmellLevel, string> = {
   bad: '악취',
   neutral: '무취',
   good: '향기'
+}
+
+export const MOLD_LABELS: Record<MoldLevel, string> = {
+  none: '없음',
+  minor: '경미',
+  severe: '심각'
+}
+
+export const CONDITION_LABELS: Record<ConditionLevel, string> = {
+  good: '양호',
+  normal: '보통',
+  bad: '불량'
+}
+
+export const HEATING_TYPE_LABELS: Record<HeatingType, string> = {
+  individual: '개별난방',
+  central: '중앙난방',
+  district: '지역난방'
+}
+
+export const HEATING_METHOD_LABELS: Record<HeatingMethod, string> = {
+  floor: '바닥난방',
+  radiator: '라디에이터',
+  electric: '전기'
+}
+
+export const DOOR_LOCK_LABELS: Record<DoorLockType, string> = {
+  keypad: '비밀번호',
+  key: '열쇠',
+  card: '카드키',
+  fingerprint: '지문'
+}
+
+export const WINDOW_TYPE_LABELS: Record<WindowType, string> = {
+  double: '이중창',
+  single: '단창'
+}
+
+export const DEFAULT_INSPECTION: Inspection = {
+  mold: 'none',
+  floorCondition: 'good',
+  heatingType: 'individual',
+  heatingMethod: 'floor',
+  hasCommercial: false,
+  doorLockType: 'keypad',
+  bathroomCount: 1,
+  bathroomCondition: 'good',
+  hasBathtub: false,
+  windowCount: 1,
+  windowType: 'double',
+  windowCondition: 'good',
 }

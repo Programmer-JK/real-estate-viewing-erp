@@ -18,8 +18,8 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
-import type { Property, Direction, ApplianceStatus, WaterPressure, NoiseLevel, LightingLevel, SmellLevel } from '@/lib/types'
-import { APPLIANCE_KEYS, WATER_PRESSURE_LABELS, NOISE_LABELS, LIGHTING_LABELS, SMELL_LABELS } from '@/lib/types'
+import type { Property, Direction, ApplianceStatus, WaterPressure, NoiseLevel, LightingLevel, SmellLevel, MoldLevel, ConditionLevel, HeatingType, HeatingMethod, DoorLockType, WindowType } from '@/lib/types'
+import { APPLIANCE_KEYS, WATER_PRESSURE_LABELS, NOISE_LABELS, LIGHTING_LABELS, SMELL_LABELS, MOLD_LABELS, CONDITION_LABELS, HEATING_TYPE_LABELS, HEATING_METHOD_LABELS, DOOR_LOCK_LABELS, WINDOW_TYPE_LABELS, DEFAULT_INSPECTION } from '@/lib/types'
 import { getDirectionWarning, getBuildingAgeWarning, getApplianceCount, getEffectiveMonthly, getAnnualCost, getAnnualWithDeposit } from '@/lib/scoring'
 import { cn } from '@/lib/utils'
 
@@ -112,6 +112,11 @@ export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
     })
   }
 
+  const inspection: typeof DEFAULT_INSPECTION = {
+    ...DEFAULT_INSPECTION,
+    ...(property.inspection ?? {}),
+  }
+
   const directionWarning = getDirectionWarning(property.direction, property.sensory.lighting)
   const buildingWarning = getBuildingAgeWarning(property.builtYear)
   const { ok, broken, none } = getApplianceCount(property.appliances)
@@ -126,7 +131,7 @@ export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
         <h2 className="text-lg font-semibold">Phase 2 - 방문 중</h2>
       </div>
 
-      <Accordion type="multiple" defaultValue={['address', 'appliances', 'sensory', 'photos']} className="flex flex-col gap-3">
+      <Accordion type="multiple" defaultValue={['address', 'appliances', 'sensory', 'inspection', 'photos']} className="flex flex-col gap-3">
         {/* Address & Price Info */}
         <AccordionItem value="address" className="rounded-lg border bg-card px-4">
           <AccordionTrigger className="text-base font-medium">주소 및 가격 정보</AccordionTrigger>
@@ -517,6 +522,253 @@ export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
                 ))}
               </div>
             </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Inspection */}
+        <AccordionItem value="inspection" className="rounded-lg border bg-card px-4">
+          <AccordionTrigger className="text-base font-medium">시설 상태 점검</AccordionTrigger>
+          <AccordionContent className="flex flex-col gap-5 pb-4">
+
+            {/* 곰팡이 */}
+            <div className="flex items-center gap-4">
+              <span className="w-14 shrink-0 text-sm text-muted-foreground">곰팡이</span>
+              <div className="flex flex-1 gap-2">
+                {(['none', 'minor', 'severe'] as const).map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => onUpdate({ inspection: { ...inspection, mold: value } })}
+                    className={cn(
+                      'min-h-[44px] flex-1 rounded-lg border text-sm font-medium transition-colors',
+                      inspection.mold === value
+                        ? value === 'none'
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : value === 'minor'
+                            ? 'border-orange-500 bg-orange-50 text-orange-700'
+                            : 'border-red-500 bg-red-50 text-red-700'
+                        : 'border-border bg-card text-foreground hover:bg-accent'
+                    )}
+                  >
+                    {MOLD_LABELS[value]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 바닥 상태 */}
+            <div className="flex items-center gap-4">
+              <span className="w-14 shrink-0 text-sm text-muted-foreground">바닥 상태</span>
+              <div className="flex flex-1 gap-2">
+                {(['good', 'normal', 'bad'] as const).map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => onUpdate({ inspection: { ...inspection, floorCondition: value } })}
+                    className={cn(
+                      'min-h-[44px] flex-1 rounded-lg border text-sm font-medium transition-colors',
+                      inspection.floorCondition === value
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-card text-foreground hover:bg-accent'
+                    )}
+                  >
+                    {CONDITION_LABELS[value]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 난방 방식 */}
+            <div className="flex items-center gap-4">
+              <span className="w-14 shrink-0 text-sm text-muted-foreground">난방</span>
+              <div className="flex flex-1 gap-2">
+                {(['individual', 'central', 'district'] as const).map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => onUpdate({ inspection: { ...inspection, heatingType: value } })}
+                    className={cn(
+                      'min-h-[44px] flex-1 rounded-lg border text-xs font-medium transition-colors',
+                      inspection.heatingType === value
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-card text-foreground hover:bg-accent'
+                    )}
+                  >
+                    {HEATING_TYPE_LABELS[value]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 난방 타입 */}
+            <div className="flex items-center gap-4">
+              <span className="w-14 shrink-0 text-sm text-muted-foreground">방식</span>
+              <div className="flex flex-1 gap-2">
+                {(['floor', 'radiator', 'electric'] as const).map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => onUpdate({ inspection: { ...inspection, heatingMethod: value } })}
+                    className={cn(
+                      'min-h-[44px] flex-1 rounded-lg border text-xs font-medium transition-colors',
+                      inspection.heatingMethod === value
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-card text-foreground hover:bg-accent'
+                    )}
+                  >
+                    {HEATING_METHOD_LABELS[value]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 상가 여부 */}
+            <div className="flex items-center gap-4">
+              <span className="w-14 shrink-0 text-sm text-muted-foreground">상가</span>
+              <div className="flex flex-1 gap-2">
+                {([true, false] as const).map((value) => (
+                  <button
+                    key={String(value)}
+                    onClick={() => onUpdate({ inspection: { ...inspection, hasCommercial: value } })}
+                    className={cn(
+                      'min-h-[44px] flex-1 rounded-lg border text-sm font-medium transition-colors',
+                      inspection.hasCommercial === value
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-card text-foreground hover:bg-accent'
+                    )}
+                  >
+                    {value ? '있음' : '없음'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 도어락 */}
+            <div className="flex items-center gap-4">
+              <span className="w-14 shrink-0 text-sm text-muted-foreground">도어락</span>
+              <div className="flex flex-1 flex-wrap gap-2">
+                {(['keypad', 'key', 'card', 'fingerprint'] as const).map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => onUpdate({ inspection: { ...inspection, doorLockType: value } })}
+                    className={cn(
+                      'min-h-[44px] flex-1 rounded-lg border text-xs font-medium transition-colors',
+                      inspection.doorLockType === value
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-card text-foreground hover:bg-accent'
+                    )}
+                  >
+                    {DOOR_LOCK_LABELS[value]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 화장실 */}
+            <div className="flex flex-col gap-2">
+              <span className="text-sm text-muted-foreground">화장실</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">개수</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => onUpdate({ inspection: { ...inspection, bathroomCount: Math.max(1, inspection.bathroomCount - 1) } })}
+                      className="flex h-9 w-9 items-center justify-center rounded-lg border text-lg hover:bg-accent"
+                    >
+                      −
+                    </button>
+                    <span className="w-6 text-center text-sm font-medium">{inspection.bathroomCount}</span>
+                    <button
+                      onClick={() => onUpdate({ inspection: { ...inspection, bathroomCount: inspection.bathroomCount + 1 } })}
+                      className="flex h-9 w-9 items-center justify-center rounded-lg border text-lg hover:bg-accent"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-1 gap-2">
+                  {(['good', 'normal', 'bad'] as const).map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => onUpdate({ inspection: { ...inspection, bathroomCondition: value } })}
+                      className={cn(
+                        'min-h-[36px] flex-1 rounded-lg border text-xs font-medium transition-colors',
+                        inspection.bathroomCondition === value
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-card text-foreground hover:bg-accent'
+                      )}
+                    >
+                      {CONDITION_LABELS[value]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button
+                onClick={() => onUpdate({ inspection: { ...inspection, hasBathtub: !inspection.hasBathtub } })}
+                className={cn(
+                  'flex min-h-[40px] items-center justify-center rounded-lg border text-sm font-medium transition-colors',
+                  inspection.hasBathtub
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-card text-foreground hover:bg-accent'
+                )}
+              >
+                욕조 {inspection.hasBathtub ? '있음' : '없음'}
+              </button>
+            </div>
+
+            {/* 창문 */}
+            <div className="flex flex-col gap-2">
+              <span className="text-sm text-muted-foreground">창문</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">개수</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => onUpdate({ inspection: { ...inspection, windowCount: Math.max(1, inspection.windowCount - 1) } })}
+                      className="flex h-9 w-9 items-center justify-center rounded-lg border text-lg hover:bg-accent"
+                    >
+                      −
+                    </button>
+                    <span className="w-6 text-center text-sm font-medium">{inspection.windowCount}</span>
+                    <button
+                      onClick={() => onUpdate({ inspection: { ...inspection, windowCount: inspection.windowCount + 1 } })}
+                      className="flex h-9 w-9 items-center justify-center rounded-lg border text-lg hover:bg-accent"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-1 gap-2">
+                  {(['double', 'single'] as const).map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => onUpdate({ inspection: { ...inspection, windowType: value } })}
+                      className={cn(
+                        'min-h-[36px] flex-1 rounded-lg border text-xs font-medium transition-colors',
+                        inspection.windowType === value
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-card text-foreground hover:bg-accent'
+                      )}
+                    >
+                      {WINDOW_TYPE_LABELS[value]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {(['good', 'normal', 'bad'] as const).map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => onUpdate({ inspection: { ...inspection, windowCondition: value } })}
+                    className={cn(
+                      'min-h-[40px] flex-1 rounded-lg border text-sm font-medium transition-colors',
+                      inspection.windowCondition === value
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-card text-foreground hover:bg-accent'
+                    )}
+                  >
+                    {CONDITION_LABELS[value]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
           </AccordionContent>
         </AccordionItem>
 

@@ -24,6 +24,9 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
+  // GET 이외의 요청은 캐시하지 않음
+  if (event.request.method !== 'GET') return
+
   // API 요청은 캐시하지 않음
   if (event.request.url.includes('/api/') || event.request.url.includes('supabase')) {
     return

@@ -53,6 +53,20 @@ export function createDefaultProperty(): Property {
       lighting: 'normal',
       smell: 'neutral'
     },
+    inspection: {
+      mold: 'none',
+      floorCondition: 'good',
+      heatingType: 'individual',
+      heatingMethod: 'floor',
+      hasCommercial: false,
+      doorLockType: 'keypad',
+      bathroomCount: 1,
+      bathroomCondition: 'good',
+      hasBathtub: false,
+      windowCount: 1,
+      windowType: 'double',
+      windowCondition: 'good'
+    },
     photos: [],
     memo: ''
   }
@@ -111,6 +125,20 @@ const SAMPLE_PROPERTIES: Property[] = [
       lighting: 'bright',
       smell: 'neutral'
     },
+    inspection: {
+      mold: 'none',
+      floorCondition: 'good',
+      heatingType: 'individual',
+      heatingMethod: 'floor',
+      hasCommercial: false,
+      doorLockType: 'keypad',
+      bathroomCount: 1,
+      bathroomCondition: 'good',
+      hasBathtub: false,
+      windowCount: 2,
+      windowType: 'double',
+      windowCondition: 'good'
+    },
     photos: [],
     memo: '채광 훌륭함. 남동향이라 오전 햇살 좋음. 단, 엘베 없어서 짐 이동 불편할 듯.'
   },
@@ -166,6 +194,20 @@ const SAMPLE_PROPERTIES: Property[] = [
       lighting: 'dark',
       smell: 'bad'
     },
+    inspection: {
+      mold: 'minor',
+      floorCondition: 'bad',
+      heatingType: 'central',
+      heatingMethod: 'radiator',
+      hasCommercial: true,
+      doorLockType: 'key',
+      bathroomCount: 1,
+      bathroomCondition: 'bad',
+      hasBathtub: false,
+      windowCount: 1,
+      windowType: 'single',
+      windowCondition: 'bad'
+    },
     photos: [],
     memo: '복도 담배 냄새 심함. 수압 매우 약함. 가격은 저렴하나 북향이라 어두움. 재확인 필요.'
   }
@@ -196,7 +238,14 @@ export function usePropertyStore() {
         if (error) throw error
 
         if (data && data.length > 0) {
-          setProperties(data.map(row => row.data as Property))
+          const defaults = createDefaultProperty()
+          setProperties(data.map(row => {
+            const saved = row.data as Property
+            return {
+              ...saved,
+              inspection: { ...defaults.inspection, ...(saved.inspection ?? {}) },
+            }
+          }))
         }
       } catch (err) {
         console.error('[supabase] load error:', err)
