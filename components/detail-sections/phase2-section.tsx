@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Copy, Check, X, AlertTriangle, ImagePlus, Compass } from 'lucide-react'
+import { Copy, Check, X, AlertTriangle, ImagePlus, Compass, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Accordion,
@@ -43,7 +43,7 @@ const APPLIANCE_ICONS: Record<string, string> = {
 
 export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
   const [copied, setCopied] = useState(false)
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null)
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const copyAddress = () => {
@@ -469,26 +469,28 @@ export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
             </div>
 
             {/* Lighting */}
-            <div className="flex items-center gap-4">
-              <span className="w-12 text-sm text-muted-foreground">채광</span>
-              <div className="flex flex-1 gap-2">
-                {(['dark', 'normal', 'bright'] as const).map((value) => (
-                  <button
-                    key={value}
-                    onClick={() => onUpdate({ sensory: { ...property.sensory, lighting: value } })}
-                    className={cn(
-                      'min-h-[44px] flex-1 rounded-lg border text-sm font-medium transition-colors',
-                      property.sensory.lighting === value
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-card text-foreground hover:bg-accent'
-                    )}
-                  >
-                    {LIGHTING_LABELS[value]}
-                  </button>
-                ))}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-4">
+                <span className="w-12 text-sm text-muted-foreground">채광</span>
+                <div className="flex flex-1 gap-2">
+                  {(['dark', 'normal', 'bright'] as const).map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => onUpdate({ sensory: { ...property.sensory, lighting: value } })}
+                      className={cn(
+                        'min-h-[44px] flex-1 rounded-lg border text-sm font-medium transition-colors',
+                        property.sensory.lighting === value
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-card text-foreground hover:bg-accent'
+                      )}
+                    >
+                      {LIGHTING_LABELS[value]}
+                    </button>
+                  ))}
+                </div>
               </div>
               {directionWarning && (
-                <Badge variant="outline" className="shrink-0 border-yellow-500 bg-yellow-50 text-yellow-600">
+                <Badge variant="outline" className="self-center border-yellow-500 bg-yellow-50 text-yellow-600">
                   <AlertTriangle className="mr-1 h-3 w-3" />
                   {directionWarning}
                 </Badge>
@@ -545,7 +547,7 @@ export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
                 {property.photos.map((photo, index) => (
                   <div key={index} className="relative shrink-0">
                     <button
-                      onClick={() => setSelectedPhoto(photo)}
+                      onClick={() => setSelectedPhotoIndex(index)}
                       className="block overflow-hidden rounded-lg"
                     >
                       <img
@@ -580,14 +582,35 @@ export function Phase2Section({ property, onUpdate }: Phase2SectionProps) {
       </Accordion>
 
       {/* Photo Preview Dialog */}
-      <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
-        <DialogContent className="max-w-[90vw] p-0">
-          {selectedPhoto && (
-            <img
-              src={selectedPhoto}
-              alt="현장 사진"
-              className="h-auto w-full"
-            />
+      <Dialog open={selectedPhotoIndex !== null} onOpenChange={() => setSelectedPhotoIndex(null)}>
+        <DialogContent className="max-w-[90vw] gap-0 p-0">
+          {selectedPhotoIndex !== null && (
+            <>
+              <img
+                src={property.photos[selectedPhotoIndex]}
+                alt={`현장 사진 ${selectedPhotoIndex + 1}`}
+                className="h-auto w-full rounded-t-lg object-contain"
+              />
+              <div className="flex items-center justify-between px-4 py-3">
+                <button
+                  onClick={() => setSelectedPhotoIndex(i => i !== null && i > 0 ? i - 1 : i)}
+                  disabled={selectedPhotoIndex === 0}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border disabled:opacity-30"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <span className="text-sm text-muted-foreground">
+                  {selectedPhotoIndex + 1} / {property.photos.length}
+                </span>
+                <button
+                  onClick={() => setSelectedPhotoIndex(i => i !== null && i < property.photos.length - 1 ? i + 1 : i)}
+                  disabled={selectedPhotoIndex === property.photos.length - 1}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border disabled:opacity-30"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
