@@ -143,7 +143,7 @@ export function SettingsTab({
 
         {/* Account */}
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-0 gap-0">
             <CardTitle className="text-base">계정</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
