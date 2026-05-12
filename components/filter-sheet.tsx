@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { cn } from '@/lib/utils'
+import { useEffect, useState } from 'react'
 
 interface FilterState {
   rentRange: [number, number]
@@ -51,6 +52,8 @@ export function FilterSheet({
     })
   }
 
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
+
   const toggleGrade = (grade: 'recommended' | 'hold' | 'not-recommended') => {
     const newGrades = filters.grades.includes(grade)
       ? filters.grades.filter(g => g !== grade)
@@ -65,14 +68,39 @@ export function FilterSheet({
     onFiltersChange({ ...filters, directions: newDirections })
   }
 
+  useEffect(() => {
+    if (!open) {
+      setKeyboardHeight(0)
+      return
+    }
+
+    const viewport = window.visualViewport
+    if (!viewport) return
+
+    const handler = () => {
+      const height = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+      setKeyboardHeight(height)
+    }
+
+    viewport.addEventListener('resize', handler)
+    viewport.addEventListener('scroll', handler)
+
+    return () => {
+      viewport.removeEventListener('resize', handler)
+      viewport.removeEventListener('scroll', handler)
+      setKeyboardHeight(0)
+    }
+  }, [open])
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl">
+      <SheetContent side="bottom" className="rounded-t-2xl mx-auto max-w-lg"
+        style={{ bottom: keyboardHeight, transition: 'bottom 0.2s ease-out' }}>
         <SheetHeader>
           <SheetTitle>필터</SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-col gap-6 py-4">
+        <div className="flex flex-col gap-4 py-4 px-4 overflow-y-auto max-h-[60dvh]">
           {/* Rent Range */}
           <div>
             <label className="mb-3 block text-sm font-medium">
